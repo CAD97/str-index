@@ -114,4 +114,15 @@ impl StrRange {
     pub fn end(self) -> StrIndex {
         self.end
     }
+
+    /// The length of this range.
+    pub fn len(self) -> StrIndex {
+        self.end() - self.start()
+    }
+
+    /// Is this range a unit range?
+    /// That is, does this range have equivalent start and end points?
+    pub fn is_empty(self) -> bool {
+        self.start() == self.end()
+    }
 }
