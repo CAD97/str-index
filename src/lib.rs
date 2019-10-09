@@ -68,6 +68,33 @@ impl StrIndex {
 }
 
 /// A range of a string, represented as a half-open range of `StrIndex`.
+///
+/// Construct a `StrRange` by using `from` conversion from `std::ops::Range`/`RangeTo`.
+/// The range is always guaranteed increasing; conversion panics if `end < start`.
+///
+/// # Examples
+///
+/// ```rust
+/// # use str_index::{StrRange, StrIndex};
+/// let zero = StrIndex::from(0);
+/// let start = StrIndex::from(10);
+/// let end = StrIndex::from(20);
+/// assert_eq!(
+///     format!("{:?}", StrRange::from(start..end)),
+///     format!("{:?}", start..end),
+/// );
+/// assert_eq!(
+///     format!("{:?}", StrRange::from(..end)),
+///     format!("{:?}", zero..end),
+/// );
+/// ```
+///
+/// ```rust,should_panic
+/// # use str_index::{StrRange, StrIndex};
+/// # let start = StrIndex::from(10);
+/// # let end = StrIndex::from(20);
+/// let this_panics = StrRange::from(end..start);
+/// ```
 #[derive(Copy, Clone, Default, Ord, PartialOrd, Eq, PartialEq, Hash)]
 pub struct StrRange {
     start: StrIndex,
@@ -75,28 +102,6 @@ pub struct StrRange {
 }
 
 impl StrRange {
-    /// The half-open range (`start..end`) between two points in a string.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use str_index::*;
-    /// let range = StrRange::between(0.into(), 10.into());
-    /// assert_eq!(
-    ///     format!("{:?}", range),
-    ///     "0..10".to_string(),
-    /// );
-    ///
-    /// // An empty unit range is also valid:
-    ///
-    /// StrRange::between(0.into(), 0.into());
-    /// ```
-    pub fn between(start: StrIndex, end: StrIndex) -> Self {
-        let range = StrRange { start, end };
-        assert!(start <= end, "invalid string range {}", range);
-        range
-    }
-
     /// The (inclusive) start index of this range.
     pub fn start(self) -> StrIndex {
         self.start
