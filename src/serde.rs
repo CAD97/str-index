@@ -1,13 +1,10 @@
-extern crate std;
-use std::prelude::v1::*;
-
 use {
     super::{StrIndex, StrRange},
+    core::fmt,
     serde::{
         de::{Deserialize, Deserializer, Error, MapAccess, SeqAccess, Visitor},
         ser::{Serialize, SerializeStruct, Serializer},
     },
-    std::fmt,
 };
 
 impl Serialize for StrIndex {
@@ -193,7 +190,7 @@ impl<'de> Visitor<'de> for StrRangeFieldVisitor {
             b"start" => Ok(StrRangeField::Start),
             b"end" => Ok(StrRangeField::End),
             _ => {
-                let value = String::from_utf8_lossy(value);
+                let value = serde::export::from_utf8_lossy(value);
                 Err(Error::unknown_field(&value, STR_RANGE_FIELDS))
             }
         }
