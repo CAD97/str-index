@@ -76,6 +76,21 @@ pub struct StrRange {
 
 impl StrRange {
     /// The half-open range (`start..end`) between two points in a string.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use str_index::*;
+    /// let range = StrRange::between(0.into(), 10.into());
+    /// assert_eq!(
+    ///     format!("{:?}", range),
+    ///     "0..10".to_string(),
+    /// );
+    ///
+    /// // An empty unit range is also valid:
+    ///
+    /// StrRange::between(0.into(), 0.into());
+    /// ```
     pub fn between(start: StrIndex, end: StrIndex) -> Self {
         let range = StrRange { start, end };
         assert!(start <= end, "invalid string range {}", range);
