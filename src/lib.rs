@@ -3,7 +3,7 @@
 #[cfg(feature = "alloc")]
 extern crate alloc;
 
-use core::u32;
+use core::{cmp, u32};
 
 mod convert;
 mod fmt;
@@ -124,5 +124,89 @@ impl StrRange {
     /// That is, does this range have equivalent start and end points?
     pub fn is_empty(self) -> bool {
         self.start() == self.end()
+    }
+
+    /// The range that is both in `self` and `other`.
+    ///
+    /// Note that ranges that touch but do not overlap return `Some(empty range)`
+    /// and ranges that do not touch and do not overlap return `None`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use str_index::*;
+    /// let left = StrRange::from(0.into()..20.into());
+    /// let right = StrRange::from(10.into()..30.into());
+    /// assert_eq!(
+    ///     left.intersection(right),
+    ///     Some(StrRange::from(10.into()..20.into())),
+    /// );
+    ///
+    /// let left = StrRange::from(0.into()..10.into());
+    /// let right = StrRange::from(10.into()..20.into());
+    /// assert_eq!(
+    ///     left.intersection(right),
+    ///     Some(StrRange::from(10.into()..10.into())),
+    /// );
+    /// ```
+    pub fn intersection(self, other: Self) -> Option<Self> {
+        let start = cmp::max(self.start(), other.start());
+        let end = cmp::min(self.end(), other.end());
+        if start <= end {
+            Some(StrRange::from(start..end))
+        } else {
+            None
+        }
+    }
+
+    /// Like [`intersection`], but disjoint ranges always return `None`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use str_index::*;
+    /// let left = StrRange::from(0.into()..20.into());
+    /// let right = StrRange::from(10.into()..30.into());
+    /// assert_eq!(
+    ///     left.nonempty_intersection(right),
+    ///     left.intersection(right),
+    /// );
+    ///
+    /// let left = StrRange::from(0.into()..10.into());
+    /// let right = StrRange::from(10.into()..20.into());
+    /// assert_eq!(
+    ///     left.nonempty_intersection(right),
+    ///     None,
+    /// );
+    /// ```
+    pub fn nonempty_intersection(self, other: Self) -> Option<Self> {
+        let start = cmp::max(self.start(), other.start());
+        let end = cmp::min(self.end(), other.end());
+        if start < end {
+            Some(StrRange::from(start..end))
+        } else {
+            None
+        }
+    }
+
+    /// The range that covers both `self` and `other`.
+    ///
+    /// Note that it will also cover any space between `self` and `other`.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use str_index::*;
+    /// let left = StrRange::from(0.into()..10.into());
+    /// let right = StrRange::from(20.into()..30.into());
+    /// assert_eq!(
+    ///     left.merge(right),
+    ///     StrRange::from(0.into()..30.into()),
+    /// );
+    /// ```
+    pub fn merge(self, other: Self) -> Self {
+        let start = cmp::min(self.start(), other.start());
+        let end = cmp::max(self.end(), other.end());
+        StrRange::from(start..end)
     }
 }
