@@ -12,8 +12,9 @@ fn str_index() {
 
 #[test]
 fn str_range() {
+    let range = StrRange::from(StrIndex::from(0)..StrIndex::from(10));
     assert_tokens(
-        &StrRange::between(0.into(), 10.into()),
+        &range,
         &[
             Token::Struct {
                 name: "StrRange",
@@ -29,7 +30,7 @@ fn str_range() {
         ],
     );
     assert_de_tokens(
-        &StrRange::between(0.into(), 10.into()),
+        &range,
         &[
             Token::Map { len: Some(2) },
             Token::Str("start"),
@@ -40,7 +41,7 @@ fn str_range() {
         ],
     );
     assert_de_tokens(
-        &StrRange::between(0.into(), 10.into()),
+        &range,
         &[
             Token::Seq { len: Some(2) },
             Token::U32(0),
