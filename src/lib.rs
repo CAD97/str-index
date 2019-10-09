@@ -82,21 +82,6 @@ impl StrRange {
         range
     }
 
-    /// The half-open range (`start..start+len`) between two points in a string.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// # use str_index::*;
-    /// assert_eq!(
-    ///     StrRange::from_len(10.into(), 10.into()),
-    ///     StrRange::between(10.into(), 20.into()),
-    /// );
-    /// ```
-    pub fn from_len(start: StrIndex, len: StrIndex) -> Self {
-        StrRange::between(start, start + len)
-    }
-
     /// The (inclusive) start index of this range.
     pub fn start(self) -> StrIndex {
         self.start
