@@ -68,6 +68,59 @@ impl StrIndex {
     pub fn checked_sub(self, rhs: Self) -> Option<Self> {
         self.raw.checked_sub(rhs.raw).map(StrIndex::from)
     }
+
+    /// A range starting at this index.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// # use str_index::*;
+    /// let point = StrIndex::from(5);
+    /// assert_eq!(
+    ///     point.range_for(10.into()),
+    ///     StrRange::from(5.into()..15.into()),
+    /// );
+    /// ```
+    pub fn range_for(self, len: StrIndex) -> StrRange {
+        StrRange::from(self..self + len)
+    }
+
+    /// A range from this index to another.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `end < self`.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// # use str_index::*;
+    /// let start = StrIndex::from(0);
+    /// let end = StrIndex::from(10);
+    /// assert_eq!(
+    ///     start.range_to(end),
+    ///     StrRange::from(start..end),
+    /// );
+    /// ```
+    pub fn range_to(self, end: StrIndex) -> StrRange {
+        StrRange::from(self..end)
+    }
+
+    /// The empty range at this index.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// # use str_index::*;
+    /// let point = StrIndex::from(10);
+    /// assert_eq!(
+    ///     point.as_unit_range(),
+    ///     point.range_to(point),
+    /// );
+    /// ```
+    pub fn as_unit_range(self) -> StrRange {
+        StrRange::from(self..self)
+    }
 }
 
 /// A range of a string, represented as a half-open range of `StrIndex`.
@@ -124,5 +177,47 @@ impl StrRange {
     /// That is, does this range have equivalent start and end points?
     pub fn is_empty(self) -> bool {
         self.start() == self.end()
+    }
+
+    /// A range with an adjusted end.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `self.end() < start`.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// # use str_index::*;
+    /// let range = StrRange::from(5.into()..10.into());
+    /// let point = StrIndex::from(0);
+    /// assert_eq!(
+    ///     range.with_start(point),
+    ///     point.range_to(range.end()),
+    /// );
+    /// ```
+    pub fn with_start(self, start: StrIndex) -> StrRange {
+        StrRange::from(start..self.end())
+    }
+
+    /// A range with an adjusted end.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `end < self.start()`.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// # use str_index::*;
+    /// let range = StrRange::from(0.into()..5.into());
+    /// let point = StrIndex::from(10);
+    /// assert_eq!(
+    ///     range.with_end(point),
+    ///     range.start().range_to(point),
+    /// );
+    /// ```
+    pub fn with_end(self, end: StrIndex) -> StrRange {
+        StrRange::from(self.start()..end)
     }
 }
