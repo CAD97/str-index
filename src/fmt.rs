@@ -5,7 +5,7 @@ use {
 
 impl fmt::Debug for StrIndex {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self)
+        fmt::Display::fmt(self, f)
     }
 }
 
@@ -17,7 +17,7 @@ impl fmt::Display for StrIndex {
 
 impl fmt::Debug for StrRange {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self)
+        fmt::Display::fmt(self, f)
     }
 }
 
