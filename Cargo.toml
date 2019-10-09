@@ -6,9 +6,13 @@ edition = "2018"
 authors = [
     "Aleksey Kladov <aleskey.kladov@gmail.com>",
     "Brendan Zabarauskas <bjzaba@yahoo.com.au>",
-    "cad97 <cad97@cad97.com>",
+    "Christopher Durham <cad97@cad97.com>",
 ]
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+description = "String index and range vocabulary newtypes"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/CAD97/str-index/tree/master"
+readme = "README.md"
+keywords = ["span","codespan","compiler","source"]
+categories = ["data-structures","no-std","parsing","rust-patterns"]
 
 [dependencies]
