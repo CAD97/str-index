@@ -17,7 +17,7 @@ categories = ["data-structures","no-std","parsing","rust-patterns"]
 
 [features]
 default = ["alloc"]
-alloc = ["serde/alloc"]
+alloc = []
 
 [dependencies]
 serde = { version = "1.0", optional = true, default-features = false }
