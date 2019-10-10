@@ -86,7 +86,7 @@ mod for_alloc_types {
 
     #[test]
     fn string_indexing() {
-        let range = StrRange::between(0.into(), 5.into());
+        let range = StrRange::from(0.into()..5.into());
         let s = String::from("swordfish");
         assert_eq!(&s[range], "sword");
     }
@@ -95,7 +95,7 @@ mod for_alloc_types {
 #[test]
 #[allow(clippy::no_effect)]
 fn str_indexing() {
-    let range = StrRange::between(0.into(), 5.into());
+    let range = StrRange::from(0.into()..5.into());
     let s = "swordfish";
     assert_eq!(&s[range], "sword");
 }
