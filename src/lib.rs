@@ -221,6 +221,64 @@ impl StrRange {
         StrRange::from(self.start()..end)
     }
 
+    /// Are these ranges disjoint?
+    ///
+    /// Ranges that touch end to start are disjoint, as no byte is in both ranges.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use str_index::*;
+    /// let left = StrRange::from(0.into()..20.into());
+    /// let right = StrRange::from(10.into()..30.into());
+    /// assert!(!left.is_disjoint(right));
+    /// assert!(!right.is_disjoint(left));
+    ///
+    /// let left = StrRange::from(0.into()..10.into());
+    /// let right = StrRange::from(10.into()..20.into());
+    /// assert!(left.is_disjoint(right));
+    /// assert!(right.is_disjoint(left));
+    ///
+    /// let empty = StrRange::from(10.into()..10.into());
+    /// assert!(empty.is_disjoint(empty));
+    /// ```
+    pub fn is_disjoint(self, other: StrRange) -> bool {
+        self.end() <= other.start() || other.end() <= self.start()
+    }
+
+    /// Does this range contain `other`?
+    ///
+    /// `other` must be completely within `self`, but may share endpoints.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use str_index::*;
+    /// let range = StrRange::from(0.into()..20.into());
+    /// assert!(range.contains(StrRange::from(5.into()..15.into())));
+    /// assert!(range.contains(range));
+    /// ```
+    pub fn contains(self, other: StrRange) -> bool {
+        self.start() <= other.start() && other.end() <= self.end()
+    }
+
+    /// Does this range contain this index?
+    ///
+    /// This is an exclusive test; use `StrIndex::as_unit_range` for an inclusive test.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use str_index::*;
+    /// let range = StrRange::from(10.into()..20.into());
+    /// assert!(range.contains_exclusive(range.start()));
+    /// assert!(!range.contains_exclusive(range.end()));
+    /// assert!(range.contains(range.end().as_unit_range()));
+    /// ```
+    pub fn contains_exclusive(self, index: StrIndex) -> bool {
+        self.start() <= index && index < self.end()
+    }
+
     /// The range that is both in `self` and `other`.
     ///
     /// Note that ranges that touch but do not overlap return `Some(empty range)`
