@@ -1,1 +1,212 @@
 #![no_std]
+
+#[cfg(feature = "alloc")]
+extern crate alloc;
+
+use core::{cmp, u32};
+
+mod convert;
+mod fmt;
+mod ops;
+#[cfg(feature = "serde")]
+mod serde;
+
+/// An index into a string.
+///
+/// The index is stored as a 32 bit integer,
+/// assuming we only deal with text shorter than 4 GiB.
+#[derive(Copy, Clone, Default, Ord, PartialOrd, Eq, PartialEq, Hash)]
+pub struct StrIndex {
+    raw: u32,
+}
+
+impl StrIndex {
+    /// Index equal to the string length of this `char`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use str_index::*;
+    /// assert_eq!(
+    ///     StrIndex::from_char_len('😂'),
+    ///     StrIndex::from(4),
+    /// );
+    /// ```
+    pub fn from_char_len(c: char) -> Self {
+        StrIndex::from(c.len_utf8() as u32)
+    }
+
+    /// Index equal to the length of this string.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use str_index::*;
+    /// assert_eq!(
+    ///     StrIndex::from_str_len("メカジキ"),
+    ///     StrIndex::from(12),
+    /// );
+    /// ```
+    pub fn from_str_len(s: &str) -> Self {
+        assert!(s.len() < u32::MAX as usize, "string index too large");
+        StrIndex {
+            raw: s.len() as u32,
+        }
+    }
+
+    /// This index as a raw `usize`.
+    pub fn to_usize(self) -> usize {
+        self.into()
+    }
+
+    /// Checked integer addition.
+    pub fn checked_add(self, rhs: Self) -> Option<Self> {
+        self.raw.checked_add(rhs.raw).map(StrIndex::from)
+    }
+
+    /// Checked integer subtraction.
+    pub fn checked_sub(self, rhs: Self) -> Option<Self> {
+        self.raw.checked_sub(rhs.raw).map(StrIndex::from)
+    }
+}
+
+/// A range of a string, represented as a half-open range of `StrIndex`.
+///
+/// Construct a `StrRange` by using `from` conversion from `std::ops::Range`/`RangeTo`.
+/// The range is always guaranteed increasing; conversion panics if `end < start`.
+///
+/// # Examples
+///
+/// ```rust
+/// # use str_index::{StrRange, StrIndex};
+/// let zero = StrIndex::from(0);
+/// let start = StrIndex::from(10);
+/// let end = StrIndex::from(20);
+/// assert_eq!(
+///     format!("{:?}", StrRange::from(start..end)),
+///     format!("{:?}", start..end),
+/// );
+/// assert_eq!(
+///     format!("{:?}", StrRange::from(..end)),
+///     format!("{:?}", zero..end),
+/// );
+/// ```
+///
+/// ```rust,should_panic
+/// # use str_index::{StrRange, StrIndex};
+/// # let start = StrIndex::from(10);
+/// # let end = StrIndex::from(20);
+/// let this_panics = StrRange::from(end..start);
+/// ```
+#[derive(Copy, Clone, Default, Ord, PartialOrd, Eq, PartialEq, Hash)]
+pub struct StrRange {
+    start: StrIndex,
+    end: StrIndex,
+}
+
+impl StrRange {
+    /// The (inclusive) start index of this range.
+    pub fn start(self) -> StrIndex {
+        self.start
+    }
+
+    /// The (exclusive) end index of this range.
+    pub fn end(self) -> StrIndex {
+        self.end
+    }
+
+    /// The length of this range.
+    pub fn len(self) -> StrIndex {
+        self.end() - self.start()
+    }
+
+    /// Is this range a unit range?
+    /// That is, does this range have equivalent start and end points?
+    pub fn is_empty(self) -> bool {
+        self.start() == self.end()
+    }
+
+    /// The range that is both in `self` and `other`.
+    ///
+    /// Note that ranges that touch but do not overlap return `Some(empty range)`
+    /// and ranges that do not touch and do not overlap return `None`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use str_index::*;
+    /// let left = StrRange::from(0.into()..20.into());
+    /// let right = StrRange::from(10.into()..30.into());
+    /// assert_eq!(
+    ///     left.intersection(right),
+    ///     Some(StrRange::from(10.into()..20.into())),
+    /// );
+    ///
+    /// let left = StrRange::from(0.into()..10.into());
+    /// let right = StrRange::from(10.into()..20.into());
+    /// assert_eq!(
+    ///     left.intersection(right),
+    ///     Some(StrRange::from(10.into()..10.into())),
+    /// );
+    /// ```
+    pub fn intersection(self, other: Self) -> Option<Self> {
+        let start = cmp::max(self.start(), other.start());
+        let end = cmp::min(self.end(), other.end());
+        if start <= end {
+            Some(StrRange::from(start..end))
+        } else {
+            None
+        }
+    }
+
+    /// Like [`intersection`], but disjoint ranges always return `None`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use str_index::*;
+    /// let left = StrRange::from(0.into()..20.into());
+    /// let right = StrRange::from(10.into()..30.into());
+    /// assert_eq!(
+    ///     left.nonempty_intersection(right),
+    ///     left.intersection(right),
+    /// );
+    ///
+    /// let left = StrRange::from(0.into()..10.into());
+    /// let right = StrRange::from(10.into()..20.into());
+    /// assert_eq!(
+    ///     left.nonempty_intersection(right),
+    ///     None,
+    /// );
+    /// ```
+    pub fn nonempty_intersection(self, other: Self) -> Option<Self> {
+        let start = cmp::max(self.start(), other.start());
+        let end = cmp::min(self.end(), other.end());
+        if start < end {
+            Some(StrRange::from(start..end))
+        } else {
+            None
+        }
+    }
+
+    /// The range that covers both `self` and `other`.
+    ///
+    /// Note that it will also cover any space between `self` and `other`.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use str_index::*;
+    /// let left = StrRange::from(0.into()..10.into());
+    /// let right = StrRange::from(20.into()..30.into());
+    /// assert_eq!(
+    ///     left.merge(right),
+    ///     StrRange::from(0.into()..30.into()),
+    /// );
+    /// ```
+    pub fn merge(self, other: Self) -> Self {
+        let start = cmp::min(self.start(), other.start());
+        let end = cmp::max(self.end(), other.end());
+        StrRange::from(start..end)
+    }
+}
