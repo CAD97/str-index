@@ -1,6 +1,6 @@
 use {
     crate::{StrIndex, StrRange},
-    core::ops::{Add, AddAssign, Index, IndexMut, Sub, SubAssign},
+    core::ops::{Add, AddAssign, Bound, Index, IndexMut, RangeBounds, Sub, SubAssign},
 };
 
 macro_rules! math {
@@ -64,6 +64,16 @@ impl Index<StrRange> for str {
 impl IndexMut<StrRange> for str {
     fn index_mut(&mut self, index: StrRange) -> &mut Self::Output {
         &mut self[index.start().into()..index.end().into()]
+    }
+}
+
+impl RangeBounds<StrIndex> for StrRange {
+    fn start_bound(&self) -> Bound<&StrIndex> {
+        Bound::Included(&self.start)
+    }
+
+    fn end_bound(&self) -> Bound<&StrIndex> {
+        Bound::Excluded(&self.end)
     }
 }
 

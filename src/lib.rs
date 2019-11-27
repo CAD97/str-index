@@ -246,39 +246,6 @@ impl StrRange {
         self.end() <= other.start() || other.end() <= self.start()
     }
 
-    /// Does this range contain `other`?
-    ///
-    /// `other` must be completely within `self`, but may share endpoints.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// # use str_index::*;
-    /// let range = StrRange::from(0.into()..20.into());
-    /// assert!(range.contains(StrRange::from(5.into()..15.into())));
-    /// assert!(range.contains(range));
-    /// ```
-    pub fn contains(self, other: StrRange) -> bool {
-        self.start() <= other.start() && other.end() <= self.end()
-    }
-
-    /// Does this range contain this index?
-    ///
-    /// This is an exclusive test; use `StrIndex::as_unit_range` for an inclusive test.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// # use str_index::*;
-    /// let range = StrRange::from(10.into()..20.into());
-    /// assert!(range.contains_exclusive(range.start()));
-    /// assert!(!range.contains_exclusive(range.end()));
-    /// assert!(range.contains(range.end().as_unit_range()));
-    /// ```
-    pub fn contains_exclusive(self, index: StrIndex) -> bool {
-        self.start() <= index && index < self.end()
-    }
-
     /// The range that is both in `self` and `other`.
     ///
     /// Note that ranges that touch but do not overlap return `Some(empty range)`
@@ -361,5 +328,38 @@ impl StrRange {
         let start = cmp::min(self.start(), other.start());
         let end = cmp::max(self.end(), other.end());
         StrRange::from(start..end)
+    }
+
+    /// Does this range contain `other`?
+    ///
+    /// `other` must be completely within `self`, but may share endpoints.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use str_index::*;
+    /// let range = StrRange::from(0.into()..20.into());
+    /// assert!(range.contains(StrRange::from(5.into()..15.into())));
+    /// assert!(range.contains(range));
+    /// ```
+    pub fn contains(self, other: StrRange) -> bool {
+        self.start() <= other.start() && other.end() <= self.end()
+    }
+
+    /// Does this range contain this index?
+    ///
+    /// This is an exclusive test; use `StrIndex::as_unit_range` for an inclusive test.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use str_index::*;
+    /// let range = StrRange::from(10.into()..20.into());
+    /// assert!(range.contains_exclusive(range.start()));
+    /// assert!(!range.contains_exclusive(range.end()));
+    /// assert!(range.contains(range.end().as_unit_range()));
+    /// ```
+    pub fn contains_exclusive(self, index: StrIndex) -> bool {
+        self.start() <= index && index < self.end()
     }
 }
